@@ -12,3 +12,8 @@ trigger caseOwnerRestriction on Case (before update) {
         }
     }
 }
+/*
+ Your organization has a rule that once a Case is created, the Case Owner must remain unchanged. 
+Users should not be allowed to modify the owner after the record is inserted in the system.
+
+*/
