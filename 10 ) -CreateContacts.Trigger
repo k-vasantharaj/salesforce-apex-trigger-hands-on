@@ -15,3 +15,6 @@ trigger accountTrigger on Account (after insert) {
         insert conList;
     }
 }
+/*
+Your organization wants to automate the creation of support contacts whenever a new Account is created.
+*/
