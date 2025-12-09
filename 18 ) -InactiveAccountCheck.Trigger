@@ -19,3 +19,6 @@ trigger contactTrigger on Contact (before insert) {
         }
     }
 }
+/*
+ Prevent Contact creation when the related Account is inactive.
+*/
