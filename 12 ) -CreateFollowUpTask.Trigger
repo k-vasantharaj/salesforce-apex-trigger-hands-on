@@ -18,3 +18,6 @@ trigger opportunityTrigger on Opportunity (after insert) {
         insert tasksToInsert;
     }
 }
+/*
+When a new Opportunity is created, automatically create a follow-up Task assigned to the Opportunity Owner.
+*/
