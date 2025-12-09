@@ -27,3 +27,7 @@ trigger AccountTrigger on Account (before insert) {
         }
     }
 }
+/*
+When inserting an Account, 
+prevent creation if another Account with the same name already exists by showing an error for duplicate names.
+*/
