@@ -29,3 +29,6 @@ trigger ContactDuplicatePhone on Contact (before insert) {
         }
     }
 }
+/*
+ When inserting Contacts, if another Contact already exists with the same Phone number, block the insert and show a validation error.
+*/
