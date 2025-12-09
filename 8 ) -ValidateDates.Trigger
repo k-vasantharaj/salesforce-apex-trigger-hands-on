@@ -11,3 +11,7 @@ trigger subscriptionTrigger on Subscription__c (before insert) {
         }
     }
 }
+/*
+When a Subscription record is created, ensure the Start Date is not greater than the End Date, 
+and show an error if the dates are invalid.
+*/
