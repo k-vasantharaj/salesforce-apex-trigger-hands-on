@@ -38,3 +38,7 @@ trigger OpportunityTrigger on Opportunity (before insert) {
         }
     }
 }
+/*
+When inserting an Opportunity, if a custom text field AccountName__c contains the name of an existing Account, 
+automatically populate the AccountId lookup field with that Account’s Id.
+*/
