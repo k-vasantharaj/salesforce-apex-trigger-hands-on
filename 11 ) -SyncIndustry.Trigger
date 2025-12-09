@@ -27,3 +27,7 @@ trigger accountTrigger on Account (after update) {
         update contactsToUpdate;
     }
 }
+/*
+When the Industry field on an Account is updated,
+automatically update the related Contacts’ custom field Industry__c to match the updated Account Industry.
+*/
