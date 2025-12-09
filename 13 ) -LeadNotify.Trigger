@@ -24,3 +24,6 @@ trigger LeadTrigger on Lead (after insert) {
         Messaging.sendEmail(emails);
     }
 }
+/*
+When a new Lead is created, send an automatic email notification to the Lead Owner with the Lead’s basic details (Name, Company, Status).
+*/
