@@ -19,3 +19,6 @@ trigger ContactTrigger on Contact (before insert) {
         }
     }
 }
+/*
+When inserting a Contact, clean the Phone number by removing non-numeric characters and automatically add the country code +91 if the number contains exactly 10 digits.
+*/
