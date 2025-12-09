@@ -14,3 +14,7 @@ trigger studentTrigger on Student__c (before insert) {
         }
     }
 }
+/*
+ Whenever a new Student record is created,
+automatically calculate the student’s age based on the Date_of_birth__c field and populate it into the Age__c field before insert.
+*/
