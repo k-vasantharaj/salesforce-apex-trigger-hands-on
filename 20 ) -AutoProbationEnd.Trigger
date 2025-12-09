@@ -9,3 +9,6 @@ trigger AutoProbationEnd on Employee__c (before insert) {
         }
     }
 }
+/*
+On inserting a new Employee__c record, automatically set Probation_End__c to be 90 days after Joining_Date__c.
+*/
