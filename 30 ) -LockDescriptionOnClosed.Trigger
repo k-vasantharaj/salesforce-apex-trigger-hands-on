@@ -14,3 +14,6 @@ trigger caseTrigger on Case (before update) {
         }
     }
 }
+/*
+When a Case status becomes Closed or is already Closed, users must not be allowed to change the Description field.
+*/
