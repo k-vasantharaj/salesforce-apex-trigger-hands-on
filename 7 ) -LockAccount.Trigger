@@ -12,3 +12,9 @@ trigger contactTrigger on Contact (before update) {
         }
     }
 }
+/*
+- Your company has a data integrity rule that once a Contact record is linked to an Account, 
+this relationship must remain unchanged. 
+Users should be allowed to set the AccountId for a Contact only when the record is being created.
+However, after the Contact has been inserted, the Account assignment should be locked.
+*/
