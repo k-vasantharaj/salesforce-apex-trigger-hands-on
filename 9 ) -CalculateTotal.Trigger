@@ -11,3 +11,7 @@ trigger invoiceTrigger on Invoice__c (before insert) {
         }
     }
 }
+/*
+When a new Invoice record is created, 
+automatically calculate Total_Amount__c as Quantity × Unit Price before inserting the record.
+*/
