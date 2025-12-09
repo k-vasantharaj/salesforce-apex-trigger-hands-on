@@ -11,3 +11,6 @@ trigger CaseDefaultPriority on Case (before insert) {
         }
     }
 }
+/*
+ When a new Case is created, and if Priority is left blank, auto-set Priority = 'Medium'.
+*/
