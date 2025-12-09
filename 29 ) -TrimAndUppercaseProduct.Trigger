@@ -17,3 +17,6 @@ trigger ProductTrigger on Product2 (before update) {
         }
     }
 }
+/*
+On update of Product, trim spaces from Name & ProductCode, and convert ProductCode to uppercase.
+*/
