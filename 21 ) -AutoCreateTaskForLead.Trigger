@@ -18,3 +18,7 @@ trigger LeadTrigger on Lead (after insert) {
         insert taskList;
     }
 }
+/*
+On Lead creation, if Status = "Open - Not Contacted", automatically create a Task assigned to the Lead Owner. Write the trigger using best practices.
+
+*/
