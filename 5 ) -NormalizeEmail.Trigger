@@ -14,3 +14,6 @@ trigger contactTrigger on Contact (before insert, before update) {
         }
     }
 }
+/*
+To improve data quality and ensure consistency across the system, your organization has mandated that all Contact email addresses must be stored in a standardized format. Users might enter email values with uppercase letters or additional spaces.
+*/
