@@ -1,0 +1,53 @@
+trigger ContactTrigger on Contact (after insert, after undelete, after delete) {
+
+    // Collect Account IDs affected by the Contact changes
+    Set<Id> accIds = new Set<Id>();
+
+    if (Trigger.isInsert || Trigger.isUndelete) {
+        for (Contact con : Trigger.new) {
+            if (con.AccountId != null) {
+                accIds.add(con.AccountId);
+            }
+        }
+    }
+
+    if (Trigger.isDelete) {
+        for (Contact con : Trigger.old) { // Use Trigger.old on delete
+            if (con.AccountId != null) {
+                accIds.add(con.AccountId);
+            }
+        }
+    }
+
+    if (!accIds.isEmpty()) {
+
+        // Map to hold Account Id -> Contact count
+        Map<Id, Integer> accMap = new Map<Id, Integer>();
+
+        // Aggregate query to count Contacts per Account
+        for (AggregateResult ar : [
+            SELECT AccountId acId, COUNT(Id) countContact
+            FROM Contact
+            WHERE AccountId IN :accIds
+            GROUP BY AccountId
+        ]) {
+            accMap.put((Id)ar.get('acId'), (Integer)ar.get('countContact'));
+        }
+
+        // Prepare Account updates
+        List<Account> accToUpdate = new List<Account>();
+        for (Id acId : accIds) {
+            Account acc = new Account();
+            acc.Id = acId;
+            acc.count_of_contacts__c = accMap.containsKey(acId) ? accMap.get(acId) : 0;
+            accToUpdate.add(acc);
+        }
+
+        if (!accToUpdate.isEmpty()) {
+            update accToUpdate;
+        }
+    }
+}
+/*
+You have a custom field count_of_contacts__c on the Account object that should always reflect the current number of related Contacts.
+*/
