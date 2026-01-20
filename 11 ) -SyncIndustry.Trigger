@@ -31,3 +31,54 @@ trigger accountTrigger on Account (after update) {
 When the Industry field on an Account is updated,
 automatically update the related Contacts’ custom field Industry__c to match the updated Account Industry.
 */
+
+//Test class
+@IsTest
+public class AccountTriggerSpec {
+
+    @IsTest
+    static void shouldUpdateContactIndustryWhenAccountIndustryChanges() {
+
+        // Arrange
+        Account acc = new Account(
+            Name = 'Test Account',
+            Industry = 'Technology'
+        );
+        insert acc;
+
+        Contact con1 = new Contact(
+            LastName = 'Contact One',
+            AccountId = acc.Id
+        );
+        Contact con2 = new Contact(
+            LastName = 'Contact Two',
+            AccountId = acc.Id
+        );
+        insert new List<Contact>{ con1, con2 };
+
+        // Act
+        acc.Industry = 'Healthcare';
+        update acc;
+
+        // Assert
+        List<Contact> updatedContacts = [
+            SELECT Industry__c
+            FROM Contact
+            WHERE AccountId = :acc.Id
+        ];
+
+        System.assertEquals(
+            2,
+            updatedContacts.size(),
+            'All related contacts should be updated'
+        );
+
+        for (Contact con : updatedContacts) {
+            System.assertEquals(
+                'Healthcare',
+                con.Industry__c,
+                'Contact Industry__c should match Account Industry'
+            );
+        }
+    }
+}
