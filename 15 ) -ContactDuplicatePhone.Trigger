@@ -1,34 +1,32 @@
-trigger ContactDuplicatePhone on Contact (before insert) {
+trigger ContactPhoneDuplicateTrigger on Contact (before insert) {
 
-    // Collect phone numbers from incoming records
-    Set<String> phoneSet = new Set<String>();
+    /*
+     * When inserting Contacts,
+     * if another Contact already exists with the same Phone number,
+     * block the insert and show a validation error.
+     */
+
+    Set<String> phoneNumbers = new Set<String>();
+
     for (Contact con : Trigger.new) {
         if (con.Phone != null) {
-            phoneSet.add(con.Phone);
+            phoneNumbers.add(con.Phone);
         }
     }
 
-    if (!phoneSet.isEmpty()) {
+    Map<String, Id> existingPhoneMap = new Map<String, Id>();
 
-        // Query existing contacts with same phone
-        Map<String, Id> existingPhones = new Map<String, Id>();
+    for (Contact c : [
+        SELECT Id, Phone
+        FROM Contact
+        WHERE Phone IN :phoneNumbers
+    ]) {
+        existingPhoneMap.put(c.Phone, c.Id);
+    }
 
-        for (Contact con : [
-            SELECT Id, Phone
-            FROM Contact
-            WHERE Phone IN :phoneSet
-        ]) {
-            existingPhones.put(con.Phone, con.Id);
-        }
-
-        // Compare and add errors
-        for (Contact con : Trigger.new) {
-            if (con.Phone != null && existingPhones.containsKey(con.Phone)) {
-                con.addError('A contact with this phone number already exists.');
-            }
+    for (Contact con : Trigger.new) {
+        if (con.Phone != null && existingPhoneMap.containsKey(con.Phone)) {
+            con.addError('A contact with this phone number already exists.');
         }
     }
 }
-/*
- When inserting Contacts, if another Contact already exists with the same Phone number, block the insert and show a validation error.
-*/
