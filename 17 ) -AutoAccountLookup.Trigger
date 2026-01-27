@@ -1,43 +1,38 @@
-trigger OpportunityTrigger on Opportunity (before insert) {
+trigger OpportunityTrigger on Opportunity (before insert, before update) {
 
-    if (Trigger.isBefore && Trigger.isInsert) {
+    Set<String> accountNames = new Set<String>();
 
-        Set<String> accNames = new Set<String>();
-
-        // Collect names from incoming Opportunities
-        for (Opportunity opp : Trigger.new) {
-            if (opp.AccountName__c != null) {
-                accNames.add(opp.AccountName__c.trim());
-            }
+    for (Opportunity opp : Trigger.new) {
+        if (opp.AccountName__c != null) {
+            accountNames.add(opp.AccountName__c.trim().toLowerCase());
         }
+    }
 
-        if (!accNames.isEmpty()) {
+    if (accountNames.isEmpty()) return;
 
-            // Query only the required Accounts (bulk safe)
-            Map<String, Id> accMap = new Map<String, Id>();
-            for (Account acc : [
-                SELECT Id, Name
-                FROM Account
-                WHERE Name IN :accNames
-            ]) {
-                accMap.put(acc.Name, acc.Id);
-            }
+    Map<String, Id> accountNameToIdMap = new Map<String, Id>();
 
-            // Populate Account lookup
-            for (Opportunity opp : Trigger.new) {
+    for (Account acc : [
+        SELECT Id, Name
+        FROM Account
+        WHERE Name IN :accountNames
+    ]) {
+        accountNameToIdMap.put(acc.Name.toLowerCase(), acc.Id);
+    }
 
-                if (opp.AccountName__c != null) {
-                    Id accId = accMap.get(opp.AccountName__c.trim());
-
-                    if (accId != null) {
-                        opp.AccountId = accId;
-                    }
-                    // Missing matches handled gracefully
-                }
-            }
+    for (Opportunity opp : Trigger.new) {
+        if (
+            opp.AccountName__c != null &&
+            accountNameToIdMap.containsKey(opp.AccountName__c.trim().toLowerCase())
+        )
+        {
+            opp.AccountId = accountNameToIdMap.get(
+                opp.AccountName__c.trim().toLowerCase()
+            );
         }
     }
 }
+
 /*
 When inserting an Opportunity, if a custom text field AccountName__c contains the name of an existing Account, 
 automatically populate the AccountId lookup field with that Account’s Id.
