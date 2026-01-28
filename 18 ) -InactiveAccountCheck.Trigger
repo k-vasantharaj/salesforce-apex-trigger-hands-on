@@ -1,24 +1,37 @@
-trigger contactTrigger on Contact (before insert) {
+trigger contactTrigger on Contact (before insert, before update) {
 
-    Set<Id> accountIds = new Set<Id>();
+    /*
+      Prevent Contact creation when the related Account is inactive.
+    */
+
+    Set<Id> accIds = new Set<Id>();
 
     for (Contact con : Trigger.new) {
         if (con.AccountId != null) {
-            accountIds.add(con.AccountId);
+            accIds.add(con.AccountId);
         }
     }
 
-    // Fetch only inactive accounts
-    Map<Id, Account> inactiveAccounts = new Map<Id, Account>(
-        [SELECT Id FROM Account WHERE Id IN :accountIds AND Active__c = 'False']
-    );
+    if (accIds.isEmpty()) return;
+
+    Set<Id> inactiveAccIds = new Set<Id>();
+
+    for (Account acc : [
+        SELECT Id, Active__c
+        FROM Account
+        WHERE Active__c = false
+        AND Id IN :accIds
+    ]) {
+        inactiveAccIds.add(acc.Id);
+    }
 
     for (Contact con : Trigger.new) {
-        if (con.AccountId != null && inactiveAccounts.containsKey(con.AccountId)) {
-            con.addError('Cannot create Contact because the related Account is inactive.');
+        if (con.AccountId != null && inactiveAccIds.contains(con.AccountId)) {
+            con.addError('Account cannot be inactive');
         }
     }
 }
+
 /*
  Prevent Contact creation when the related Account is inactive.
 */
