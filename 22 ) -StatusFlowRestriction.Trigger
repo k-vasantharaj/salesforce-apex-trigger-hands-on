@@ -29,3 +29,59 @@ trigger caseTrigger on Case (before update) {
  New → In Progress → Resolved → Closed
  Block any backward movement and display an error message.
 */
+
+//Test class
+
+@isTest
+public class asyncDemo {
+
+    // ❌ Backward status change should be blocked
+    @isTest
+    static void testCaseStatusBackwardChange() {
+
+        Case c = new Case();
+        c.Origin = 'Phone';
+        c.Status = 'Working';
+        insert c;
+
+        Boolean statusUpdateBlocked = false;
+
+        try {
+            c.Status = 'New';
+            update c;
+        } catch (DmlException e) {
+            statusUpdateBlocked = true;
+        }
+
+        System.assertEquals(
+            true,
+            statusUpdateBlocked,
+            'Case status should not be updated backward'
+        );
+    }
+
+    // ✅ Forward / allowed status change
+    @isTest
+    static void testCaseStatusAllowedChange() {
+
+        Case c = new Case();
+        c.Origin = 'Phone';
+        c.Status = 'Working';
+        insert c;
+
+        Boolean statusUpdateBlocked = false;
+
+        try {
+            c.Status = 'Escalated';
+            update c;
+        } catch (DmlException e) {
+            statusUpdateBlocked = true;
+        }
+
+        System.assertEquals(
+            false,
+            statusUpdateBlocked,
+            'Case status should be updated'
+        );
+    }
+}
