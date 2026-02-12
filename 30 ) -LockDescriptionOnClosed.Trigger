@@ -1,19 +1,42 @@
-trigger caseTrigger on Case (before update) {
+trigger CaseTrigger on Case (before update) {
 
+    for (Case newCase : Trigger.new) {
 
-    for (Case c : Trigger.New) {
-        Case oldC = Trigger.oldMap.get(c.Id);
+        Case oldCase = Trigger.oldMap.get(newCase.Id);
 
-        // Check if Description changed
-        if (oldC.Description != c.Description) {
+        // Prevent Description change if Case is already closed
+        // or being changed to Closed
+        if ((oldCase.Status == 'Closed' || newCase.Status == 'Closed') &&
+            oldCase.Description != newCase.Description) {
 
-            // If status is already closed OR becoming closed
-            if (c.Status == 'Closed') {
-                c.Description.addError('Description cannot be modified when Status is Closed.');
-            }
+            newCase.Description.addError(
+                'Description cannot be changed once the Case is closed.'
+            );
         }
     }
 }
+
 /*
 When a Case status becomes Closed or is already Closed, users must not be allowed to change the Description field.
 */
+
+//Test class
+
+
+trigger CaseTrigger on Case (before update) {
+
+    for (Case newCase : Trigger.new) {
+
+        Case oldCase = Trigger.oldMap.get(newCase.Id);
+
+        // Prevent Description change if Case is already closed
+        // or being changed to Closed
+        if ((oldCase.Status == 'Closed' || newCase.Status == 'Closed') &&
+            oldCase.Description != newCase.Description) {
+
+            newCase.Description.addError(
+                'Description cannot be changed once the Case is closed.'
+            );
+        }
+    }
+}
