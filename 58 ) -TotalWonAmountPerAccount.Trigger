@@ -79,3 +79,37 @@ Update the total in the Account field Total_Won_Amount__c.
     
     
 }
+//Test class
+
+@isTest
+public class testDemo {
+
+    @isTest
+    static void checkIsUpdated()
+    {
+        Account acc = new Account();
+        acc.Name = 'acc1';
+        insert acc;
+        
+        Opportunity opp = new Opportunity();
+        opp.Name ='opp1';
+        opp.AccountId = acc.Id;
+        opp.CloseDate = System.today().addDays(10);
+        opp.StageName = 'Prospecting';
+        opp.Amount = 5000;
+        insert opp;
+        
+        Test.startTest();
+        opp.StageName = 'Closed Won';
+        update opp;
+        Test.stopTest();
+        
+        Account updatedAccount = [
+            SELECT Id, Total_Won_Amount__c 
+            FROM Account 
+            WHERE Id = :acc.Id
+        ];
+        
+        System.assertEquals(5000, updatedAccount.Total_Won_Amount__c, 'must be same');          
+    }
+}
