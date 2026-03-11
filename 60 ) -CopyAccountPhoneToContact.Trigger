@@ -60,3 +60,79 @@ public class TriggerHandler
         }
     }
 }
+
+
+//Test class
+
+@isTest
+public class ContactPhoneFromAccountTest {
+
+    @isTest
+    static void testPhoneCopiedFromAccount() {
+
+        // Create test Account
+        Account testAccount = new Account(
+            Name = 'Test Account',
+            Phone = '808098098'
+        );
+        insert testAccount;
+
+        // Create Contact without Phone
+        Contact testContact = new Contact(
+            LastName = 'Test Contact',
+            AccountId = testAccount.Id
+        );
+
+        Test.startTest();
+        insert testContact;
+        Test.stopTest();
+
+        // Verify Phone copied from Account
+        Contact resultContact = [
+            SELECT Phone
+            FROM Contact
+            WHERE Id = :testContact.Id
+        ];
+
+        System.assertEquals(
+            '808098098',
+            resultContact.Phone,
+            'Contact phone should be copied from Account'
+        );
+    }
+
+    @isTest
+    static void testPhoneNotOverwrittenIfAlreadyExists() {
+
+        // Create test Account
+        Account testAccount = new Account(
+            Name = 'Test Account',
+            Phone = '808098098'
+        );
+        insert testAccount;
+
+        // Create Contact with existing Phone
+        Contact testContact = new Contact(
+            LastName = 'Test Contact',
+            Phone = '098098098',
+            AccountId = testAccount.Id
+        );
+
+        Test.startTest();
+        insert testContact;
+        Test.stopTest();
+
+        // Verify Phone is not overwritten
+        Contact resultContact = [
+            SELECT Phone
+            FROM Contact
+            WHERE Id = :testContact.Id
+        ];
+
+        System.assertEquals(
+            '098098098',
+            resultContact.Phone,
+            'Existing contact phone should not be overwritten'
+        );
+    }
+}
