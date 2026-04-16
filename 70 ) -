@@ -1,0 +1,82 @@
+//Question
+
+Account – Duplicate Prevention (Standard Fields Only)
+
+Trigger on Account:
+
+Before Insert → Prevent duplicate if same Name already exists
+After Insert → Create Task for review
+
+//Trigger
+
+trigger AccountTrigger on Account (before insert , after insert) {
+
+
+    if(Trigger.isBefore && Trigger.isInsert)
+    {
+        TriggerHandler.beforeInsertOperation(Trigger.new);
+    }
+    if(Trigger.isAfter && Trigger.isInsert)
+    {
+        TriggerHandler.afterInsertOperation(Trigger.new);
+    }
+   
+}
+
+
+//Handler
+
+public class TriggerHandler {
+
+    public static void beforeInsertOperation(List<Account> newAccounts)
+    {
+        if(newAccounts == null || newAccounts.isEmpty()) return;
+
+        Set<String> names = new Set<String>();
+
+        // collect incoming names
+        for(Account acc : newAccounts){
+            if(acc.Name != null){
+                names.add(acc.Name.trim().toLowerCase());
+            }
+        }
+
+        Set<String> existingNames = new Set<String>();
+
+        // get existing account names
+        for(Account acc : [SELECT Name FROM Account WHERE Name != null]){
+            existingNames.add(acc.Name.trim().toLowerCase());
+        }
+
+        // check duplicates
+        for(Account acc : newAccounts){
+            if(acc.Name != null){
+                String name = acc.Name.trim().toLowerCase();
+
+                if(existingNames.contains(name)){
+                    acc.addError('Account with same name already exists');
+                }
+            }
+        }
+    }
+
+    public static void afterInsertOperation(List<Account> newAccounts)
+    {
+        if(newAccounts == null || newAccounts.isEmpty()) return;
+
+        List<Task> tasks = new List<Task>();
+
+        for(Account acc : newAccounts){
+            Task t = new Task();
+            t.WhatId = acc.Id;
+            t.Subject = 'New Account created';
+            t.Status = 'Not Started';
+            t.Priority = 'Medium';
+            tasks.add(t);
+        }
+
+        if(!tasks.isEmpty()){
+            insert tasks;
+        }
+    }
+}
