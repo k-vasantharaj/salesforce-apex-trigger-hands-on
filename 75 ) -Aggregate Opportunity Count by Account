@@ -1,1 +1,63 @@
+//Trigger
+trigger OpportunityTrigger on Opportunity (after insert) {
 
+    if (Trigger.isAfter && Trigger.isInsert) {
+        OpportunityHandler.updateOpportunityCount(Trigger.new);
+    }
+}
+
+//Handler
+public class OpportunityHandler {
+
+    public static void updateOpportunityCount(List<Opportunity> opps) {
+
+        if (opps == null || opps.isEmpty()) {
+            return;
+        }
+
+        Set<Id> accountIds = new Set<Id>();
+
+        for (Opportunity opp : opps) {
+            if (opp.AccountId != null) {
+                accountIds.add(opp.AccountId);
+            }
+        }
+
+        if (accountIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, Integer> opportunityCountByAccount = new Map<Id, Integer>();
+
+        for (AggregateResult ar : [
+            SELECT AccountId accountId, COUNT(Id) opportunityCount
+            FROM Opportunity
+            WHERE AccountId IN :accountIds
+            GROUP BY AccountId
+        ]) {
+            opportunityCountByAccount.put(
+                (Id) ar.get('accountId'),
+                (Integer) ar.get('opportunityCount')
+            );
+        }
+
+        List<Account> accountsToUpdate = new List<Account>();
+
+        for (Id accountId : accountIds) {
+            accountsToUpdate.add(new Account(
+                Id = accountId,
+                Open_Opportunity_Count__c =
+                    opportunityCountByAccount.containsKey(accountId)
+                    ? opportunityCountByAccount.get(accountId)
+                    : 0
+            ));
+        }
+
+        if (!accountsToUpdate.isEmpty()) {
+            update accountsToUpdate;
+        }
+    }
+}
+
+
+//Create an Opportunity Trigger to calculate the total number of Opportunities for each Account and store the count in Account.Open_Opportunity_Count__c.
