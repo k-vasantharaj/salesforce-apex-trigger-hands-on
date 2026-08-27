@@ -1,0 +1,63 @@
+//Trigger
+
+trigger CaseTrigger on Case (after update) {
+
+    if (Trigger.isAfter && Trigger.isUpdate) {
+
+        CaseTriggerHandler.caseMethod(
+            Trigger.new,
+            Trigger.oldMap
+        );
+    }
+}
+
+//Handler
+
+public class CaseTriggerHandler {
+
+    public static void caseMethod(
+        List<Case> caseList,
+        Map<Id, Case> oldCases
+    ) {
+
+        List<Messaging.SingleEmailMessage> emails =
+            new List<Messaging.SingleEmailMessage>();
+
+        if (caseList == null || caseList.isEmpty()) {
+            return;
+        }
+
+        for (Case c : caseList) {
+
+            Case oldC = oldCases.get(c.Id);
+
+            if (c.Status != oldC.Status &&
+                c.Status == 'Escalated') {
+
+                Messaging.SingleEmailMessage email =
+                    new Messaging.SingleEmailMessage();
+
+                email.setTargetObjectId(c.OwnerId);
+
+                email.setSubject(
+                    'Case Status Changed to Escalated'
+                );
+
+                email.setPlainTextBody(
+                    'Case ' + c.CaseNumber +
+                    ' has been changed to Escalated.'
+                );
+
+                email.setSaveAsActivity(false);
+
+                emails.add(email);
+            }
+        }
+
+        if (!emails.isEmpty()) {
+            Messaging.sendEmail(emails);
+        }
+    }
+}
+
+//Create a Case trigger that sends an email to the Case Owner whenever the Case Status changes to Escalated.
