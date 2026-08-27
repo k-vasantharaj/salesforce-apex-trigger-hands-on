@@ -1,0 +1,93 @@
+//Trigger
+
+trigger CaseTrigger on Case (
+    after insert,
+    after update,
+    after delete,
+    after undelete
+) {
+    if (Trigger.isAfter) {
+        CaseTriggerHandler.caseMethod(
+            Trigger.new,
+            Trigger.oldMap,
+            Trigger.isDelete
+        );
+    }
+}
+
+//Handler
+
+public class CaseTriggerHandler {
+
+    public static void caseMethod(
+        List<Case> newCases,
+        Map<Id, Case> oldCases,
+        Boolean isDelete
+    ) {
+
+        Set<Id> accountIds = new Set<Id>();
+
+        // Collect Account IDs from new records
+        if (newCases != null) {
+            for (Case c : newCases) {
+                if (c.AccountId != null) {
+                    accountIds.add(c.AccountId);
+                }
+            }
+        }
+
+        // Collect old Account IDs
+        // Important when AccountId is changed or a Case is deleted
+        if (oldCases != null) {
+            for (Case oldCase : oldCases.values()) {
+                if (oldCase.AccountId != null) {
+                    accountIds.add(oldCase.AccountId);
+                }
+            }
+        }
+
+        if (accountIds.isEmpty()) {
+            return;
+        }
+
+        // Count Cases for each Account
+        Map<Id, Integer> accountCaseCount = new Map<Id, Integer>();
+
+        for (AggregateResult ar : [
+            SELECT AccountId accountId,
+                   COUNT(Id) caseCount
+            FROM Case
+            WHERE AccountId IN :accountIds
+            GROUP BY AccountId
+        ]) {
+            accountCaseCount.put(
+                (Id) ar.get('accountId'),
+                (Integer) ar.get('caseCount')
+            );
+        }
+
+        // Prepare Accounts for update
+        List<Account> accountsToUpdate = new List<Account>();
+
+        for (Id accountId : accountIds) {
+
+            Integer caseCount = accountCaseCount.containsKey(accountId)
+                ? accountCaseCount.get(accountId)
+                : 0;
+
+            accountsToUpdate.add(
+                new Account(
+                    Id = accountId,
+                    Count_Of_Cases__c = caseCount
+                )
+            );
+        }
+
+        // Single DML operation
+        if (!accountsToUpdate.isEmpty()) {
+            update accountsToUpdate;
+        }
+    }
+}
+
+//Create a Case trigger that maintains the total number of Cases for each related Account in Account.Count_Of_Cases__c.
