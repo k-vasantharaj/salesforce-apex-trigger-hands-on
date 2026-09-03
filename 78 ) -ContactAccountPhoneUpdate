@@ -1,0 +1,57 @@
+//Question:
+
+//When Contact Phone is updated, update the related Account's Contact_Latest_Phone__c field with the new phone number.
+
+//Trigger
+
+trigger ContactTrigger on Contact (after update) {
+
+    ContactTriggerHandler.handlerMethod(
+        Trigger.new,
+        Trigger.oldMap
+    );
+
+}
+
+//Handler class
+
+public class ContactTriggerHandler {
+
+    public static void handlerMethod(
+        List<Contact> conList,
+        Map<Id, Contact> oldMap
+    ) {
+
+        Map<Id, String> accMap = new Map<Id, String>();
+
+        for(Contact con : conList) {
+
+            Contact oldCon = oldMap.get(con.Id);
+
+            if(con.Phone != oldCon.Phone &&
+               con.Phone != null &&
+               con.AccountId != null) {
+
+                accMap.put(con.AccountId, con.Phone);
+            }
+        }
+
+        if(accMap.isEmpty()) {
+            return;
+        }
+
+        List<Account> accList = [
+            SELECT Id, Contact_Latest_Phone__c
+            FROM Account
+            WHERE Id IN :accMap.keySet()
+        ];
+
+        for(Account acc : accList) {
+
+            acc.Contact_Latest_Phone__c = accMap.get(acc.Id);
+        }
+
+        update accList;
+    }
+}
+
