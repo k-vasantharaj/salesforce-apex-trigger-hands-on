@@ -1,0 +1,56 @@
+//Question
+
+//When a Contact is created, check whether another Contact with the same Email already exists. If it exists, 
+//prevent the new Contact from being created and show an error message.
+
+//Trigger
+trigger ContactTrigger on Contact (before insert) {
+
+    ContactTriggerHandler.checkDuplicates(Trigger.new);
+
+}
+
+//Handler
+
+public class ContactTriggerHandler {
+
+    public static void checkDuplicates(List<Contact> conList) {
+
+        Set<String> emailSet = new Set<String>();
+
+        for(Contact con : conList) {
+
+            if(con.Email != null) {
+                emailSet.add(con.Email.toLowerCase());
+            }
+        }
+
+        if(emailSet.isEmpty()) {
+            return;
+        }
+
+        List<Contact> existingContacts = [
+            SELECT Id, Email
+            FROM Contact
+            WHERE Email IN :emailSet
+        ];
+
+        Set<String> existingEmails = new Set<String>();
+
+        for(Contact con : existingContacts) {
+
+            if(con.Email != null) {
+                existingEmails.add(con.Email.toLowerCase());
+            }
+        }
+
+        for(Contact con : conList) {
+
+            if(con.Email != null &&
+               existingEmails.contains(con.Email.toLowerCase())) {
+
+                con.addError('A Contact with this Email already exists.');
+            }
+        }
+    }
+}
